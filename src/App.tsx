@@ -33,10 +33,10 @@ export function App() {
   const brokenLinesCount = lines.filter((l) => l.factoryId === activeFactory.id && l.isBroken).length;
 
   return (
-    <div dir="rtl" className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div dir="rtl" className="h-dvh min-h-0 overflow-hidden bg-slate-950 text-slate-100 flex flex-col">
       <TopHud />
 
-      <div className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto">
+      <div className="flex-1 min-h-0 flex flex-col w-full">
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -45,7 +45,7 @@ export function App() {
           brokenLinesCount={brokenLinesCount}
         />
 
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+        <main className="flex-1 min-h-0 w-full overflow-y-auto overscroll-contain px-3 pt-3 pb-4">
           {activeTab === 'dashboard' && <DashboardTab onNavigate={setActiveTab} />}
           {activeTab === 'departments' && <DepartmentsTab />}
           {activeTab === 'production' && <ProductionTab />}

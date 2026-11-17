@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Cpu, PauseCircle, PlayCircle, PlusCircle, Wrench } from 'lucide-react';
+import {
+  Cpu,
+  PauseCircle,
+  PlayCircle,
+  PlusCircle,
+  Wrench,
+  Factory,
+  Clock3,
+  Zap,
+  Package,
+  Scissors,
+} from 'lucide-react';
 import { PRODUCTS, RAW_MATERIALS } from '../../data/gameCatalog';
 import { useGameStore } from '../../store/useGameStore';
 import { ProductKey, RawMaterialKey } from '../../types/game';
@@ -18,171 +29,270 @@ export const ProductionTab: React.FC = () => {
   } = useGameStore();
 
   const factory = factories.find((f) => f.id === activeFactoryId) || factories[0];
-  const facLines = lines.filter((l) => l.factoryId === factory.id);
-  const maxLines = Math.floor(factory.areaSqm / 200);
-
   const [selectedProduct, setSelectedProduct] = useState<ProductKey>('shirt');
 
+  if (!factory) {
+    return <div className="p-5 text-center text-slate-400">لا يوجد مصنع متاح حالياً.</div>;
+  }
+
+  const facLines = lines.filter((l) => l.factoryId === factory.id);
+  const maxLines = Math.floor(factory.areaSqm / 200);
   const productKeys = Object.keys(PRODUCTS) as ProductKey[];
 
   return (
-    <div className="space-y-6">
-      {/* إنشاء خط إنتاج جديد */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="w-full min-w-0 space-y-4 pb-3">
+
+      {/* عنوان الشاشة */}
+      <div className="flex items-center gap-3 px-1">
+        <div className="w-11 h-11 rounded-2xl bg-amber-500/15 flex items-center justify-center">
+          <Factory className="w-6 h-6 text-amber-400" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-lg font-black text-white">إدارة الإنتاج</h2>
+          <p className="text-xs text-slate-400 truncate">{factory.name}</p>
+        </div>
+      </div>
+
+      {/* ملخص سريع */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+          <div className="flex items-center gap-2 text-slate-400 text-xs">
+            <Cpu className="w-4 h-4 text-amber-400" />
+            خطوط الإنتاج
+          </div>
+          <p className="text-xl font-black text-white mt-2">
+            {facLines.length}<span className="text-sm text-slate-500"> / {maxLines}</span>
+          </p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+          <div className="flex items-center gap-2 text-slate-400 text-xs">
+            <PlayCircle className="w-4 h-4 text-emerald-400" />
+            خطوط نشطة
+          </div>
+          <p className="text-xl font-black text-emerald-400 mt-2">
+            {facLines.filter((l) => l.active && !l.isBroken).length}
+          </p>
+        </div>
+      </div>
+
+      {/* إنشاء خط إنتاج */}
+      <section className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center">
+            <PlusCircle className="w-5 h-5 text-amber-400" />
+          </div>
           <div>
-            <h2 className="text-lg font-black text-white">إنشاء خط إنتاج جديد في {factory.name}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              الخطوط الحالية: {facLines.length} من {maxLines} (قم بتوسعة مبنى المصنع لزيادة المساحة)
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={selectedProduct}
-              onChange={(e) => setSelectedProduct(e.target.value as ProductKey)}
-              className="bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-3 py-2"
-            >
-              {productKeys.map((pk) => (
-                <option key={pk} value={pk}>
-                  {PRODUCTS[pk].name} (سعر البيع الأساسي: {PRODUCTS[pk].basePrice} ج.م)
-                </option>
-              ))}
-            </select>
-
-            <button
-              onClick={() => addProductionLine(factory.id, selectedProduct)}
-              disabled={cash < 12000 || facLines.length >= maxLines}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-extrabold text-sm rounded-xl transition flex items-center gap-1.5"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>تأسيس الخط (12,000 ج.م)</span>
-            </button>
+            <h3 className="font-extrabold text-sm text-white">إنشاء خط إنتاج جديد</h3>
+            <p className="text-[11px] text-slate-400">اختر المنتج الذي تريد تصنيعه</p>
           </div>
         </div>
 
-        {/* معاينة وصفة التصنيع للمنتج المختار */}
-        <div className="mt-4 bg-slate-950/60 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center gap-3 text-xs">
-          <span className="text-amber-400 font-bold">وصفة تصنيع ({PRODUCTS[selectedProduct].name}):</span>
-          {Object.entries(PRODUCTS[selectedProduct].recipe).map(([mat, qty]) => (
-            <span key={mat} className="bg-slate-800 px-2.5 py-1 rounded-lg text-slate-200">
-              {RAW_MATERIALS[mat as RawMaterialKey].name}: <strong>{qty}</strong>
+        <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">
+          <label className="block text-xs text-slate-400 mb-2">المنتج</label>
+          <select
+            value={selectedProduct}
+            onChange={(e) => setSelectedProduct(e.target.value as ProductKey)}
+            className="w-full min-w-0 bg-slate-800 border border-slate-700 text-sm text-white rounded-xl px-3 py-3 outline-none focus:border-amber-500"
+          >
+            {productKeys.map((pk) => (
+              <option key={pk} value={pk}>
+                {PRODUCTS[pk].name} - {PRODUCTS[pk].basePrice.toLocaleString()} ج.م
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* وصفة التصنيع */}
+        <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3 space-y-2">
+          <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
+            <Package className="w-4 h-4" />
+            خامات تصنيع {PRODUCTS[selectedProduct].name}
+          </div>
+
+          <div className="space-y-2">
+            {Object.entries(PRODUCTS[selectedProduct].recipe).map(([mat, qty]) => (
+              <div key={mat} className="flex justify-between items-center gap-2 text-xs">
+                <span className="text-slate-300">{RAW_MATERIALS[mat as RawMaterialKey].name}</span>
+                <span className="font-bold text-white">{qty} وحدة</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-slate-800 pt-2 flex justify-between items-center gap-2">
+            <span className="text-[11px] text-slate-400 flex items-center gap-1">
+              <Clock3 className="w-3.5 h-3.5" />
+              زمن الإنتاج
             </span>
-          ))}
-          <span className="text-slate-400 mr-auto">
-            الزمن: {PRODUCTS[selectedProduct].productionTimeTicks} ساعات عمل • مستوى الشركة: {level}
-          </span>
+            <span className="text-xs font-bold text-sky-400">
+              {PRODUCTS[selectedProduct].productionTimeTicks} ساعات عمل
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* قائمة خطوط الإنتاج العاملة */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {facLines.map((line) => {
-          const prod = PRODUCTS[line.productKey];
-          const machineCost = line.machines * 3500;
-          const canProduce = Object.entries(prod.recipe).every(
-            ([k, q]) => factory.rawInventory[k as RawMaterialKey] >= (q || 0) * line.machines
-          );
+        <div className="flex items-center justify-between text-xs gap-2">
+          <span className="text-slate-400">مستوى الشركة: {level}</span>
+          <span className="text-slate-400">التأسيس: 12,000 ج.م</span>
+        </div>
 
-          return (
-            <div key={line.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Cpu className="w-5 h-5 text-amber-400" />
-                    <h3 className="font-extrabold text-lg text-white">{prod.name}</h3>
-                  </div>
-                  <span
-                    className={`text-xs px-2.5 py-1 rounded-full font-bold ${
-                      line.isBroken
-                        ? 'bg-rose-500/20 text-rose-400'
-                        : !canProduce
-                        ? 'bg-amber-500/20 text-amber-300'
-                        : line.active
-                        ? 'bg-emerald-500/20 text-emerald-400'
-                        : 'bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    {line.isBroken
-                      ? 'عطل ميكانيكي'
-                      : !canProduce
-                      ? 'بانتظار الخامات'
-                      : line.active
-                      ? 'قيد التشغيل'
-                      : 'متوقف'}
-                  </span>
-                </div>
+        <button
+          onClick={() => addProductionLine(factory.id, selectedProduct)}
+          disabled={cash < 12000 || facLines.length >= maxLines}
+          className="w-full min-h-12 py-3 bg-amber-500 hover:bg-amber-400 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black text-sm rounded-xl transition flex items-center justify-center gap-2"
+        >
+          <PlusCircle className="w-5 h-5" />
+          تأسيس خط الإنتاج
+        </button>
 
-                {/* شريط التقدم */}
-                <div className="mb-4">
-                  <div className="flex justify-between text-xs text-slate-400 mb-1">
-                    <span>تقدم الدورة الحالية ({line.machines} قطع/دورة)</span>
-                    <span>{Math.round(line.progress)}%</span>
-                  </div>
-                  <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden">
-                    <div className="bg-amber-500 h-full transition-all" style={{ width: `${line.progress}%` }} />
-                  </div>
-                </div>
+        {cash < 12000 && (
+          <p className="text-[11px] text-rose-400 text-center">رصيدك لا يكفي لتأسيس خط جديد.</p>
+        )}
+        {facLines.length >= maxLines && (
+          <p className="text-[11px] text-amber-300 text-center">وصل المصنع للحد الأقصى من خطوط الإنتاج. وسّع مساحة المصنع أولاً.</p>
+        )}
+      </section>
 
-                <div className="grid grid-cols-3 gap-2 text-center bg-slate-950/60 p-3 rounded-xl text-xs mb-3">
-                  <div>
-                    <span className="text-slate-400 block">الماكينات</span>
-                    <span className="font-extrabold text-white text-sm">
-                      {line.machines} / {line.maxMachines}
+      {/* خطوط الإنتاج الحالية */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <Scissors className="w-5 h-5 text-amber-400" />
+            <h3 className="font-extrabold text-sm text-white">خطوط الإنتاج الحالية</h3>
+          </div>
+          <span className="text-xs text-slate-500">{facLines.length} خط</span>
+        </div>
+
+        {facLines.length === 0 ? (
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center">
+            <Factory className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+            <p className="text-sm font-bold text-slate-300">لا توجد خطوط إنتاج</p>
+            <p className="text-xs text-slate-500 mt-1">أنشئ أول خط إنتاج لبدء التصنيع.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {facLines.map((line) => {
+              const prod = PRODUCTS[line.productKey];
+              const machineCost = line.machines * 3500;
+
+              const canProduce = Object.entries(prod.recipe).every(
+                ([k, q]) => factory.rawInventory[k as RawMaterialKey] >= (q || 0) * line.machines
+              );
+
+              const status = line.isBroken
+                ? { text: 'عطل ميكانيكي', color: 'text-rose-400', bg: 'bg-rose-500/15', bar: 'bg-rose-500' }
+                : !canProduce
+                ? { text: 'بانتظار الخامات', color: 'text-amber-300', bg: 'bg-amber-500/15', bar: 'bg-amber-500' }
+                : line.active
+                ? { text: 'قيد التشغيل', color: 'text-emerald-400', bg: 'bg-emerald-500/15', bar: 'bg-emerald-500' }
+                : { text: 'متوقف', color: 'text-slate-400', bg: 'bg-slate-700', bar: 'bg-slate-500' };
+
+              return (
+                <article key={line.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
+                  {/* اسم المنتج والحالة */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-10 h-10 shrink-0 rounded-xl bg-slate-800 flex items-center justify-center">
+                        <Cpu className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-black text-sm text-white truncate">{prod.name}</h4>
+                        <p className="text-[11px] text-slate-400 mt-1">خط إنتاج #{facLines.indexOf(line) + 1}</p>
+                      </div>
+                    </div>
+                    <span className={`shrink-0 text-[10px] px-2 py-1.5 rounded-lg font-bold ${status.bg} ${status.color}`}>
+                      {status.text}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-slate-400 block">الجودة المتوقعة</span>
-                    <span className="font-extrabold text-emerald-400 text-sm">{line.qualityScore}%</span>
+
+                  {/* التقدم */}
+                  <div className="bg-slate-950/70 rounded-xl p-3">
+                    <div className="flex justify-between items-center text-xs mb-2">
+                      <span className="text-slate-400">تقدم دورة الإنتاج</span>
+                      <span className="font-black text-white">{Math.round(line.progress)}%</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${status.bar}`}
+                        style={{ width: `${Math.min(100, Math.max(0, line.progress))}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-2">{line.machines} قطع لكل دورة إنتاج</p>
                   </div>
-                  <div>
-                    <span className="text-slate-400 block">الكهرباء</span>
-                    <span className="font-extrabold text-sky-400 text-sm">{line.machines * 45} ج.م/يوم</span>
+
+                  {/* معلومات الخط */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-slate-800/70 rounded-xl p-2 text-center">
+                      <Cpu className="w-4 h-4 text-amber-400 mx-auto mb-1" />
+                      <p className="text-[10px] text-slate-400">الماكينات</p>
+                      <p className="text-sm font-black text-white mt-1">{line.machines}/{line.maxMachines}</p>
+                    </div>
+                    <div className="bg-slate-800/70 rounded-xl p-2 text-center">
+                      <Scissors className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                      <p className="text-[10px] text-slate-400">الجودة</p>
+                      <p className="text-sm font-black text-emerald-400 mt-1">{line.qualityScore}%</p>
+                    </div>
+                    <div className="bg-slate-800/70 rounded-xl p-2 text-center">
+                      <Zap className="w-4 h-4 text-sky-400 mx-auto mb-1" />
+                      <p className="text-[10px] text-slate-400">الكهرباء</p>
+                      <p className="text-xs font-black text-sky-400 mt-1">{line.machines * 45}</p>
+                      <p className="text-[9px] text-slate-500">ج.م/يوم</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="text-xs text-slate-400">
-                  <span className="font-bold text-slate-300">استهلاك الدورة الواحدة: </span>
-                  {Object.entries(prod.recipe).map(([k, q]) => (
-                    <span key={k} className="inline-block ml-2">
-                      {RAW_MATERIALS[k as RawMaterialKey].name} ({(q || 0) * line.machines})
-                    </span>
-                  ))}
-                </div>
-              </div>
+                  {/* استهلاك الخامات */}
+                  <div className="bg-slate-950/50 rounded-xl p-3 space-y-2">
+                    <p className="text-[11px] font-bold text-slate-300">استهلاك الخامات لكل دورة</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {Object.entries(prod.recipe).map(([k, q]) => (
+                        <span key={k} className="text-[10px] bg-slate-800 text-slate-300 px-2 py-1.5 rounded-lg">
+                          {RAW_MATERIALS[k as RawMaterialKey].name}: {(q || 0) * line.machines}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-800">
-                {line.isBroken ? (
-                  <button
-                    onClick={() => repairLine(line.id)}
-                    disabled={cash < 1800}
-                    className="flex-1 py-2 bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1"
-                  >
-                    <Wrench className="w-4 h-4" />
-                    إصلاح العطل (1,800 ج.م)
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => toggleLineActive(line.id)}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1"
-                  >
-                    {line.active ? <PauseCircle className="w-4 h-4 text-amber-400" /> : <PlayCircle className="w-4 h-4 text-emerald-400" />}
-                    {line.active ? 'إيقاف' : 'تشغيل'}
-                  </button>
-                )}
+                  {/* أزرار التحكم */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    {line.isBroken ? (
+                      <button
+                        onClick={() => repairLine(line.id)}
+                        disabled={cash < 1800}
+                        className="col-span-2 min-h-12 py-3 bg-rose-500/15 border border-rose-500/30 disabled:opacity-40 text-rose-400 font-black text-xs rounded-xl flex items-center justify-center gap-2"
+                      >
+                        <Wrench className="w-4 h-4" />
+                        إصلاح العطل (1,800 ج.م)
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => toggleLineActive(line.id)}
+                        className="min-h-12 py-3 bg-slate-800 border border-slate-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2"
+                      >
+                        {line.active ? (
+                          <><PauseCircle className="w-4 h-4 text-amber-400" /> إيقاف الخط</>
+                        ) : (
+                          <><PlayCircle className="w-4 h-4 text-emerald-400" /> تشغيل الخط</>
+                        )}
+                      </button>
+                    )}
 
-                <button
-                  onClick={() => upgradeLineMachines(line.id)}
-                  disabled={cash < machineCost || line.machines >= line.maxMachines}
-                  className="flex-1 py-2 bg-amber-500/15 hover:bg-amber-500 hover:text-slate-950 disabled:opacity-40 text-amber-400 font-bold text-xs rounded-xl transition"
-                >
-                  + إضافة ماكينة ({machineCost.toLocaleString()} ج.م)
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                    <button
+                      onClick={() => upgradeLineMachines(line.id)}
+                      disabled={cash < machineCost || line.machines >= line.maxMachines}
+                      className="min-h-12 py-2 px-2 bg-amber-500/15 border border-amber-500/20 disabled:opacity-40 text-amber-400 font-bold text-[11px] rounded-xl flex flex-col items-center justify-center gap-1"
+                    >
+                      <span className="flex items-center gap-1"><PlusCircle className="w-4 h-4" /> إضافة ماكينة</span>
+                      <span>{machineCost.toLocaleString()} ج.م</span>
+                    </button>
+                  </div>
+
+                  {line.machines >= line.maxMachines && (
+                    <p className="text-[10px] text-slate-500 text-center">وصل الخط للحد الأقصى من الماكينات.</p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 };

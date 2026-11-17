@@ -35,63 +35,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
   lowStockCount,
   brokenLinesCount,
 }) => {
-  const navItems: { key: TabKey; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] = [
-    { key: 'dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { key: 'departments', label: 'الأقسام الصناعية والمغاسل', icon: <Factory className="w-5 h-5" /> },
-    {
-      key: 'production',
-      label: 'خطوط الإنتاج',
-      icon: <Cpu className="w-5 h-5" />,
-      badge: brokenLinesCount > 0 ? brokenLinesCount : undefined,
-      badgeColor: 'bg-rose-500',
-    },
-    {
-      key: 'warehouses',
-      label: 'المخازن والمشتريات',
-      icon: <Warehouse className="w-5 h-5" />,
-      badge: lowStockCount > 0 ? lowStockCount : undefined,
-      badgeColor: 'bg-amber-500 text-slate-950',
-    },
-    { key: 'hr', label: 'الموارد البشرية', icon: <Users className="w-5 h-5" /> },
-    {
-      key: 'export',
-      label: 'الطلبات والتصدير العالمي',
-      icon: <Globe2 className="w-5 h-5" />,
-      badge: openOrdersCount,
-      badgeColor: 'bg-sky-500 text-slate-950',
-    },
-    { key: 'finance', label: 'الإدارة المالية والبنوك', icon: <Landmark className="w-5 h-5" /> },
-    { key: 'factories_settings', label: 'المصانع الدولية والحفظ', icon: <Settings className="w-5 h-5" /> },
+  const navItems = [
+    { key: 'dashboard' as TabKey, label: 'الرئيسية', icon: <LayoutDashboard /> },
+    { key: 'departments' as TabKey, label: 'الأقسام', icon: <Factory /> },
+    { key: 'production' as TabKey, label: 'الإنتاج', icon: <Cpu />, badge: brokenLinesCount },
+    { key: 'warehouses' as TabKey, label: 'المخازن', icon: <Warehouse />, badge: lowStockCount },
+    { key: 'hr' as TabKey, label: 'الموظفين', icon: <Users /> },
+    { key: 'export' as TabKey, label: 'الطلبات', icon: <Globe2 />, badge: openOrdersCount },
+    { key: 'finance' as TabKey, label: 'المالية', icon: <Landmark /> },
+    { key: 'factories_settings' as TabKey, label: 'الإعدادات', icon: <Settings /> },
   ];
 
   return (
-    <aside className="w-full lg:w-64 bg-slate-900 border-b lg:border-b-0 lg:border-l border-slate-800 p-3 shrink-0">
-      <nav className="flex lg:flex-col gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+    <aside className="fixed bottom-0 inset-x-0 z-50 bg-slate-900 border-t border-slate-700 pb-[env(safe-area-inset-bottom)]">
+      <nav className="grid grid-cols-4 gap-1 p-2">
         {navItems.map((item) => {
           const isActive = activeTab === item.key;
           return (
             <button
               key={item.key}
               onClick={() => setActiveTab(item.key)}
-              className={`flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition ${
+              className={`relative flex flex-col items-center justify-center gap-1 rounded-xl py-2 min-w-0 ${
                 isActive
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950'
+                  : 'text-slate-400 active:bg-slate-800'
               }`}
             >
-              <span className="flex items-center gap-2.5">
-                {item.icon}
-                <span>{item.label}</span>
+              <span className="relative">
+                {React.cloneElement(item.icon, { size: 21, strokeWidth: 2.2 })}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="absolute -top-2 -right-3 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] flex items-center justify-center font-bold">
+                    {item.badge}
+                  </span>
+                )}
               </span>
-              {item.badge !== undefined && (
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full font-extrabold ${
-                    isActive ? 'bg-slate-950 text-amber-400' : item.badgeColor || 'bg-slate-700 text-white'
-                  }`}
-                >
-                  {item.badge}
-                </span>
-              )}
+              <span className="text-[10px] font-bold truncate w-full text-center">
+                {item.label}
+              </span>
             </button>
           );
         })}
